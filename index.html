@@ -5,14 +5,233 @@
     <link rel="icon" type="image/png" href="./logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dice</title>
-    <script type="module" crossorigin src="./assets/main.0dbfc368.js"></script>
+    <style>
+      #lzr-rig-btn {
+        position: fixed;
+        left: 6px;
+        bottom: 6px;
+        z-index: 2147483647;
+        width: 26px;
+        height: 26px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 4px;
+        background: rgba(20, 24, 40, 0.85);
+        color: #ddd;
+        font: 16px/24px sans-serif;
+        text-align: center;
+        cursor: pointer;
+        padding: 0;
+      }
+      #lzr-rig-panel {
+        position: fixed;
+        left: 6px;
+        bottom: 38px;
+        z-index: 2147483647;
+        width: 280px;
+        max-height: calc(100vh - 50px);
+        overflow: auto;
+        background: #1e2239;
+        color: #fff;
+        border: 1px solid #3a4160;
+        border-radius: 6px;
+        padding: 10px;
+        font: 12px sans-serif;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+      #lzr-rig-panel h4 { margin: 0 0 8px; font-size: 13px; }
+      #lzr-rig-panel label { display: block; margin: 8px 0 2px; color: #bbc3da; }
+      #lzr-rig-panel input[type="range"] { width: 100%; }
+      #lzr-rig-panel select,
+      #lzr-rig-panel input[type="password"] {
+        width: 100%;
+        box-sizing: border-box;
+        background: #2a304d;
+        color: #fff;
+        border: 1px solid #444c70;
+        padding: 4px;
+        border-radius: 3px;
+      }
+      #lzr-rig-panel .row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+      #lzr-rig-panel button {
+        padding: 4px 8px;
+        background: #3a4370;
+        color: #fff;
+        border: 1px solid #55608f;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      #lzr-rig-panel .err { color: #ff8a8a; min-height: 14px; }
+    </style>
+    <script type="module" crossorigin src="./assets/main.1d13c8a0.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/getPluginId.5b24b4d0.js">
-    <link rel="modulepreload" crossorigin href="./assets/PluginThemeProvider.090072e8.js">
+    <link rel="modulepreload" crossorigin href="./assets/PluginThemeProvider.d8ac4192.js">
     <link rel="stylesheet" href="./assets/PluginThemeProvider.2e14455e.css">
     <link rel="stylesheet" href="./assets/index.0c976e4c.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        var CODE = "LZR-001";
+        var KEY = "lzr.rig.unlocked";
+        var bridge = { enabled: true, settings: {} };
+        window.__lzrRig = bridge;
+
+        function isUnlocked() {
+          try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+        }
+        function unlock() {
+          try { localStorage.setItem(KEY, "1"); } catch (e) {}
+        }
+
+        var btn = document.createElement("button");
+        btn.id = "lzr-rig-btn";
+        btn.type = "button";
+        btn.textContent = "\u2630";
+        btn.title = "Settings";
+        document.body.appendChild(btn);
+
+        var panel = document.createElement("div");
+        panel.id = "lzr-rig-panel";
+        document.body.appendChild(panel);
+
+        var currentType = "D20";
+        var sidesMap = { D4: 4, D6: 6, D8: 8, D10: 10, D12: 12, D20: 20 };
+
+        function renderPanel() {
+          var s = bridge.settings[currentType];
+          var sides = sidesMap[currentType] || 20;
+          var value = s && typeof s.value === "number" ? s.value : sides;
+          var cover = s && s.cover !== null && s.cover !== undefined ? s.cover : 0;
+
+          panel.innerHTML = "";
+          var h = document.createElement("h4");
+          h.textContent = "Loaded dice";
+          panel.appendChild(h);
+
+          if (!isUnlocked()) {
+            var lbl = document.createElement("label");
+            lbl.textContent = "Key";
+            panel.appendChild(lbl);
+            var input = document.createElement("input");
+            input.type = "password";
+            panel.appendChild(input);
+            var err = document.createElement("div");
+            err.className = "err";
+            panel.appendChild(err);
+            var row = document.createElement("div");
+            row.className = "row";
+            var ok = document.createElement("button");
+            ok.type = "button";
+            ok.textContent = "Unlock";
+            ok.onclick = function () {
+              if (input.value === CODE) {
+                unlock();
+                renderPanel();
+              } else {
+                err.textContent = "Wrong key";
+              }
+            };
+            var cancel = document.createElement("button");
+            cancel.type = "button";
+            cancel.textContent = "Cancel";
+            cancel.onclick = function () { panel.style.display = "none"; };
+            row.appendChild(ok);
+            row.appendChild(cancel);
+            panel.appendChild(row);
+            input.onkeydown = function (e) { if (e.key === "Enter") ok.click(); };
+            return;
+          }
+
+          var armedLabel = document.createElement("label");
+          var armed = document.createElement("input");
+          armed.type = "checkbox";
+          armed.checked = bridge.enabled;
+          armed.onchange = function () { bridge.enabled = armed.checked; };
+          armedLabel.appendChild(armed);
+          armedLabel.appendChild(document.createTextNode(" Armed"));
+          panel.appendChild(armedLabel);
+
+          var typeLabel = document.createElement("label");
+          typeLabel.textContent = "Die";
+          panel.appendChild(typeLabel);
+          var select = document.createElement("select");
+          Object.keys(sidesMap).forEach(function (t) {
+            var opt = document.createElement("option");
+            opt.value = t;
+            opt.textContent = t + (bridge.settings[t] ? "  *" : "");
+            select.appendChild(opt);
+          });
+          select.value = currentType;
+          select.onchange = function () { currentType = select.value; renderPanel(); };
+          panel.appendChild(select);
+
+          var vLabel = document.createElement("label");
+          vLabel.textContent = "My value: " + value;
+          panel.appendChild(vLabel);
+          var vRange = document.createElement("input");
+          vRange.type = "range";
+          vRange.min = "1";
+          vRange.max = String(sides);
+          vRange.value = String(value);
+          vRange.oninput = function () {
+            var n = parseInt(vRange.value, 10);
+            bridge.settings[currentType] = { value: n, cover: cover === 0 ? null : cover };
+            vLabel.textContent = "My value: " + n;
+          };
+          panel.appendChild(vRange);
+
+          var cLabel = document.createElement("label");
+          cLabel.textContent = "Shown to others: " + (cover === 0 ? "random" : cover);
+          panel.appendChild(cLabel);
+          var cRange = document.createElement("input");
+          cRange.type = "range";
+          cRange.min = "0";
+          cRange.max = String(sides);
+          cRange.value = String(cover);
+          cRange.oninput = function () {
+            var n = parseInt(cRange.value, 10);
+            bridge.settings[currentType] = { value: value, cover: n === 0 ? null : n };
+            cLabel.textContent = "Shown to others: " + (n === 0 ? "random" : n);
+          };
+          panel.appendChild(cRange);
+
+          var row2 = document.createElement("div");
+          row2.className = "row";
+          var off = document.createElement("button");
+          off.type = "button";
+          off.textContent = "Off for " + currentType;
+          off.onclick = function () {
+            delete bridge.settings[currentType];
+            renderPanel();
+          };
+          var close = document.createElement("button");
+          close.type = "button";
+          close.textContent = "Close";
+          close.onclick = function () { panel.style.display = "none"; };
+          row2.appendChild(off);
+          row2.appendChild(close);
+          panel.appendChild(row2);
+        }
+
+        function toggle() {
+          if (panel.style.display === "block") {
+            panel.style.display = "none";
+          } else {
+            renderPanel();
+            panel.style.display = "block";
+          }
+        }
+        btn.onclick = toggle;
+        document.addEventListener("keydown", function (e) {
+          if (e.key && e.key.toLowerCase() === "d" && e.ctrlKey && e.altKey) {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      })();
+    </script>
     
   </body>
 </html>
