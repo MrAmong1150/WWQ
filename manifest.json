@@ -1,6 +1,6 @@
 {
   "name": "Dice",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "manifest_version": 1,
   "author": "Owlbear Rodeo",
   "homepage_url": "https://extensions.owlbear.rodeo/dice",
@@ -9,7 +9,7 @@
   "action": {
     "title": "Dice",
     "icon": "./icon.svg",
-    "popover": "./",
+    "popover": "./?v=220",
     "height": 700,
     "width": 375
   },
